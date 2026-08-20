@@ -279,9 +279,12 @@ export class MarketDurableObject extends DurableObject {
   }
 
   loadPlayer(playerId) {
-    const row = this.sql
+    // Do not use .one() here: a new player legitimately has no row yet,
+    // and Cloudflare's SQL API throws when .one() returns zero rows.
+    const rows = this.sql
       .exec(`SELECT cash, stones, rabbits FROM players WHERE player_id = ?`, playerId)
-      .one();
+      .toArray();
+    const row = rows[0];
     if (!row) return null;
     return {
       cash: Number(row.cash),
