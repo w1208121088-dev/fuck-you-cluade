@@ -537,13 +537,26 @@ function setBgmVolume(v) {
 // ── WebSocket ──
 function connectWS() {
   const proto = location.protocol === "https:" ? "wss" : "ws";
-  ws = new WebSocket(`${proto}://${location.host}/ws/${encodeURIComponent(playerId)}`);
-  ws.onopen  = () => document.getElementById("conn-dot").classList.add("on");
+  ws = new WebSocket(`${proto}://${location.host}/websocket?playerId=${encodeURIComponent(playerId)}`);
+  ws.onopen  = () => {
+    document.getElementById("conn-dot").classList.add("on");
+    document.getElementById("notice").textContent = "市场连接正常";
+  };
   ws.onclose = () => {
     document.getElementById("conn-dot").classList.remove("on");
+    document.getElementById("notice").textContent = "市场连接断开，3 秒后重连…";
     setTimeout(connectWS, 3000);
   };
-  ws.onmessage = e => handleMsg(JSON.parse(e.data));
+  ws.onerror = () => {
+    document.getElementById("notice").textContent = "市场连接失败，正在重试…";
+  };
+  ws.onmessage = e => {
+    try {
+      handleMsg(JSON.parse(e.data));
+    } catch (err) {
+      console.error("Invalid WebSocket message", e.data, err);
+    }
+  };
 }
 
 function handleMsg(msg) {
