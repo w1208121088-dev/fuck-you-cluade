@@ -79,11 +79,10 @@ export default {
 
       const id = env.MARKET.idFromName("global-market");
       const stub = env.MARKET.get(id);
-      const forwardUrl = new URL(request.url);
-      forwardUrl.pathname = "/websocket";
-      forwardUrl.searchParams.set("playerId", playerId);
-      const headers = new Headers(request.headers);
-      return stub.fetch(new Request(forwardUrl.toString(), { method: "GET", headers }));
+      // Forward the original WebSocket upgrade request unchanged.
+      // Rebuilding the Request can drop or alter WebSocket upgrade metadata
+      // in some runtimes, which causes the Durable Object to return 426.
+      return stub.fetch(request);
     }
 
     return env.ASSETS.fetch(request);
@@ -147,7 +146,7 @@ export class MarketDurableObject extends DurableObject {
   async fetch(request) {
     const url = new URL(request.url);
 
-    if (url.pathname !== "/websocket") {
+    if (!url.pathname.startsWith("/ws/")) {
       return new Response("Not found", { status: 404 });
     }
 
@@ -155,7 +154,7 @@ export class MarketDurableObject extends DurableObject {
       return new Response("Expected WebSocket", { status: 426 });
     }
 
-    const playerId = url.searchParams.get("playerId");
+    const playerId = decodeURIComponent(url.pathname.slice("/ws/".length));
     if (!playerId) {
       return new Response("Missing playerId", { status: 400 });
     }
