@@ -1,12 +1,12 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "gongzhengsuo-market",
+  "name": "fuck-you-claude",
   "main": "src/index.js",
   "compatibility_date": "2026-08-20",
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": ["/ws/*"]
+    "run_worker_first": ["/websocket"]
   },
   "durable_objects": {
     "bindings": [
