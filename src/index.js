@@ -67,12 +67,12 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname.startsWith("/ws/")) {
+    if (url.pathname === "/websocket") {
       if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
         return new Response("Expected WebSocket", { status: 426 });
       }
 
-      const playerId = decodeURIComponent(url.pathname.slice("/ws/".length));
+      const playerId = url.searchParams.get("playerId") ?? "";
       if (!playerId || playerId.length > 128) {
         return new Response("Invalid player id", { status: 400 });
       }
@@ -146,7 +146,7 @@ export class MarketDurableObject extends DurableObject {
   async fetch(request) {
     const url = new URL(request.url);
 
-    if (!url.pathname.startsWith("/ws/")) {
+    if (url.pathname !== "/websocket") {
       return new Response("Not found", { status: 404 });
     }
 
@@ -154,7 +154,7 @@ export class MarketDurableObject extends DurableObject {
       return new Response("Expected WebSocket", { status: 426 });
     }
 
-    const playerId = decodeURIComponent(url.pathname.slice("/ws/".length));
+    const playerId = url.searchParams.get("playerId") ?? "";
     if (!playerId) {
       return new Response("Missing playerId", { status: 400 });
     }
